@@ -14,26 +14,32 @@ target_min = int(input("How long should the playlist be in minutes? "))
 target_ms = target_min*60*1000
 min_ms = 90 * 1000  
 max_ms = 7 * 60 * 1000 
-filtered_df = df[(df["duration_ms"] >= min_ms) & (df["duration_ms"] <= max_ms) & (df["popularity"] > 80) & (df["track_genre"] == "indie")]
+filtered_df = df[(df["duration_ms"] >= min_ms) & (df["duration_ms"] <= max_ms) & (df["popularity"] > 70) & (df["track_genre"] == "pop")]
 
-tracks = list(zip(filtered_df["track_id"], filtered_df["duration_ms"], filtered_df["energy"]))
+tracks_duration_ms = list(zip(filtered_df["track_id"], filtered_df["duration_ms"], filtered_df["energy"]))
+tracks = []
+for id,duration,energy in tracks_duration_ms:
+    tracks.append((id,round(duration/1000),energy)) 
+
+print(tracks)
+
 playlist = []
 
-possible_times = [0]
-possible_playlists = [[]]
+possible_times = {0:[]}
 for track in tracks:
-    new_times = []
     print(f"Operating on track {tracks.index(track)+1}/{len(tracks)}.")
-    for n,time in enumerate(possible_times):
-        if time > target_ms*1.2:
+    for time in possible_times.copy().keys():
+        if time > target_min*60*1.1:
             continue
-        new_times.append(track[1]+time)
-        possible_playlists.append(possible_playlists[n] + [track[0]])
-    possible_times += new_times
+        new_time = time + track[1]
+        if track[0] in possible_times[time]:
+            continue
+        new_track_path = possible_times[time]+[track[0]]
+        possible_times.update({new_time:new_track_path})
 
-best_time = min(possible_times, key= lambda x: abs(x-target_ms))
-playlist = possible_playlists[possible_times.index(best_time)]
-print(playlist)
+best_time = min(possible_times.keys(), key= lambda x: abs(x-target_min*60))
+print(f"Playlist time: {best_time}")
+playlist = possible_times[best_time]
 
 
 lookup = filtered_df.set_index("track_id")
