@@ -19,36 +19,27 @@ filtered_df = df[(df["duration_ms"] >= min_ms) & (df["duration_ms"] <= max_ms) &
 tracks = list(zip(filtered_df["track_id"], filtered_df["duration_ms"], filtered_df["energy"]))
 playlist = []
 
-def time(pl):
-    playlist_time = 0
-    for item in pl:
-        playlist_time += item[1]
-    return playlist_time
+possible_times = [0]
+possible_playlists = [[]]
+for track in tracks:
+    new_times = []
+    print(f"Operating on track {tracks.index(track)+1}/{len(tracks)}.")
+    for n,time in enumerate(possible_times):
+        if time > target_ms*1.2:
+            continue
+        new_times.append(track[1]+time)
+        possible_playlists.append(possible_playlists[n] + [track[0]])
+    possible_times += new_times
 
-def shouldBeSwapped(pl,duration_target): # Swaps the element in the playlist that minimises the difference with the target duration.
-    best = ['',-999999]
-    for item in pl:
-        if abs(item[1]-duration_target) < abs(best[1]-duration_target):
-            best = item
-    return best
+best_time = min(possible_times, key= lambda x: abs(x-target_ms))
+playlist = possible_playlists[possible_times.index(best_time)]
+print(playlist)
 
-while time(playlist) < target_ms:
-    playlist.append(tracks.pop(0))
-
-difference = time(playlist) - target_ms
-while abs(difference) > 2000: # Acceptable margin of error in ms
-    next_track_length = tracks[0][1]
-    tracks.append(playlist.pop(playlist.index(shouldBeSwapped(playlist,next_track_length + difference))))
-    playlist.append(tracks.pop(0))
-    difference = time(playlist) - target_ms
-    print(time(playlist)/60000)
-
-playlist = sorted(playlist, key=lambda x: x[-1], reverse=True)
 
 lookup = filtered_df.set_index("track_id")
 
-for item in playlist:
-    row = lookup.loc[item[0]]
+for track_id in playlist:
+    row = lookup.loc[track_id]
     print(f"{row['track_name']}, {row['artists']}")
 
 
@@ -99,13 +90,11 @@ def add_tracks(access_token, playlist_id, uris):
     return response.json()
 
 
-# ---- run it ----
-code = "AQALHwdL-ZERgFbc5aZDiQ5IPtwuy-KVLq7wAJfrIdSr8CjYBxEn4Iwf-74Krdf-e9ZnLDaSaL1_PFviED9BsNis9GSqjncSUuYVQDM2Yur6CGZ3foP7LLE0bCvM1w77fdMGtwp9GzNw44oe-SXItNJ9tVVs8pqQ_uYvojRBrdZCDyBWZf_3_6kekY6LCxOeHK2JjSi2KGovOdFrm0cEzlvMg6-CkEv66zqWb11ktblNEeZj0WRbWCVHlzj08iiUk_XGg9bx-NfP2t7hL3AtWOQcgKZ4j_-L4y8"
 access_token = get_access_token()
 user_id = get_user_id(access_token)
 spotifyPlaylist = create_playlist(access_token, target_min)
 
 print(spotifyPlaylist["external_urls"]["spotify"])
 
-uris = [f"spotify:track:{item[0]}" for item in playlist]
+uris = [f"spotify:track:{track_id}" for track_id in playlist]
 add_tracks(access_token, spotifyPlaylist["id"], uris)
