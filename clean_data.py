@@ -1,6 +1,6 @@
 import pandas as pd
 
-RAW_FILE = "spotify-tracks source data.csv"
+RAW_FILE = "spotify-tracks_source_data.csv"
 CLEAN_FILE = "spotify-tracks.csv"
 
 df = pd.read_csv(RAW_FILE)
