@@ -14,7 +14,7 @@ target_min = int(input("How long should the playlist be in minutes? "))
 target_ms = target_min*60*1000
 min_ms = 90 * 1000  
 max_ms = 7 * 60 * 1000 
-filtered_df = df[(df["duration_ms"] >= min_ms) & (df["duration_ms"] <= max_ms) & (df["popularity"] > 10) & (df["track_genre"] == "hardcore")]
+filtered_df = df[(df["duration_ms"] >= min_ms) & (df["duration_ms"] <= max_ms) & (df["popularity"] > 80) & (df["track_genre"] == "indie")]
 
 tracks = list(zip(filtered_df["track_id"], filtered_df["duration_ms"], filtered_df["energy"]))
 playlist = []
@@ -45,7 +45,7 @@ while abs(difference) > 2000: # Acceptable margin of error in ms
 
 playlist = sorted(playlist, key=lambda x: x[-1], reverse=True)
 
-lookup = df.set_index("track_id")
+lookup = filtered_df.set_index("track_id")
 
 for item in playlist:
     row = lookup.loc[item[0]]
