@@ -1,6 +1,11 @@
 import pandas as pd
 import requests
 import base64
+from spotipy.oauth2 import SpotifyOAuth
+from dotenv import load_dotenv
+load_dotenv()
+import os
+
 
 # MAKING THE PLAYLIST
 df = pd.read_csv("spotify-tracks.csv")
@@ -9,9 +14,9 @@ target_min = int(input("How long should the playlist be in minutes? "))
 target_ms = target_min*60*1000
 min_ms = 90 * 1000  
 max_ms = 7 * 60 * 1000 
-filtered_df = df[(df["duration_ms"] >= min_ms) & (df["duration_ms"] <= max_ms) & (df["popularity"] > 80) & (df["track_genre"] == "pop")]
+filtered_df = df[(df["duration_ms"] >= min_ms) & (df["duration_ms"] <= max_ms) & (df["popularity"] > 10) & (df["track_genre"] == "hardcore")]
 
-tracks = list(zip(filtered_df["track_id"], filtered_df["duration_ms"]))
+tracks = list(zip(filtered_df["track_id"], filtered_df["duration_ms"], filtered_df["energy"]))
 playlist = []
 
 def time(pl):
@@ -31,12 +36,14 @@ while time(playlist) < target_ms:
     playlist.append(tracks.pop(0))
 
 difference = time(playlist) - target_ms
-while abs(difference) > 100: # Acceptable margin of error in ms
+while abs(difference) > 2000: # Acceptable margin of error in ms
     next_track_length = tracks[0][1]
     tracks.append(playlist.pop(playlist.index(shouldBeSwapped(playlist,next_track_length + difference))))
     playlist.append(tracks.pop(0))
     difference = time(playlist) - target_ms
     print(time(playlist)/60000)
+
+playlist = sorted(playlist, key=lambda x: x[-1], reverse=True)
 
 lookup = df.set_index("track_id")
 
@@ -46,28 +53,18 @@ for item in playlist:
 
 
 # WRITING THE PLAYLIST OT SPOTIFY
+SPOTIFY_CLIENT_ID = os.environ["SPOTIFY_CLIENT_ID"]
+SPOTIFY_CLIENT_SECRET = os.environ["SPOTIFY_CLIENT_SECRET"]
+SPOTIFY_REDIRECT_URI = "http://127.0.0.1:8888/callback"
 
-CLIENT_ID = "41769ddb18cc4fe8828383daa95eedfc"
-CLIENT_SECRET = "6068e30d28214a72bc6efcc2c1e83e36"
-REDIRECT_URI = "http://127.0.0.1:8888/callback"
-
-def get_access_token(code):
-    auth_b64 = base64.b64encode(f"{CLIENT_ID}:{CLIENT_SECRET}".encode()).decode()
-    response = requests.post(
-        "https://accounts.spotify.com/api/token",
-        headers={
-            "Authorization": f"Basic {auth_b64}",
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
-        data={
-            "grant_type": "authorization_code",
-            "code": code,
-            "redirect_uri": REDIRECT_URI
-        }
-    )  
-    print(response.text)  
-    response.raise_for_status()
-    return response.json()["access_token"]
+def get_access_token():
+    auth = SpotifyOAuth(
+        client_id=SPOTIFY_CLIENT_ID,
+        client_secret=SPOTIFY_CLIENT_SECRET,
+        redirect_uri=SPOTIFY_REDIRECT_URI,
+        scope="playlist-modify-private",
+    )
+    return auth.get_access_token(as_dict=False)
 
 def get_user_id(access_token):
     response = requests.get(
@@ -103,12 +100,12 @@ def add_tracks(access_token, playlist_id, uris):
 
 
 # ---- run it ----
-code = "AQDPlx02MRYeqfpbCEaMUc8DKq7nrZmRXKwMMf4EwBKc1Ir7f7z_O9IqaiBRGvLfkSbTa7dlt8x8UaR2uJHgWDCRFbgtzyh9FFawDYGubDpaBB6ITzmsdYqVgFlupE_ZoingR0o77o2gQRYNOAFa7fFtfUb4N076U2Bne7THDF4hbrYcnwdZ5BXaBYX-6AVKb_sqiDhEdQ4XjIrXefpNWav8cIUppzpwETZ4NiIW-I6qCTqYE3PNo9sesbYgVElQ-uclpC47hGH4tdTzIO2BXjgzYxzYAnX9QEc"
-access_token = get_access_token(code)
+code = "AQALHwdL-ZERgFbc5aZDiQ5IPtwuy-KVLq7wAJfrIdSr8CjYBxEn4Iwf-74Krdf-e9ZnLDaSaL1_PFviED9BsNis9GSqjncSUuYVQDM2Yur6CGZ3foP7LLE0bCvM1w77fdMGtwp9GzNw44oe-SXItNJ9tVVs8pqQ_uYvojRBrdZCDyBWZf_3_6kekY6LCxOeHK2JjSi2KGovOdFrm0cEzlvMg6-CkEv66zqWb11ktblNEeZj0WRbWCVHlzj08iiUk_XGg9bx-NfP2t7hL3AtWOQcgKZ4j_-L4y8"
+access_token = get_access_token()
 user_id = get_user_id(access_token)
 spotifyPlaylist = create_playlist(access_token, target_min)
 
 print(spotifyPlaylist["external_urls"]["spotify"])
 
-uris = [f"spotify:track:{track_id}" for track_id, duration in playlist]
+uris = [f"spotify:track:{item[0]}" for item in playlist]
 add_tracks(access_token, spotifyPlaylist["id"], uris)
