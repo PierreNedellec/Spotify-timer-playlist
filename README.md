@@ -1,4 +1,5 @@
-This app will generate a playlist of your favourite tracks or of a particular genre which is a certain length of time. In this way, the playlist acts as a timer. This is more of a fun project than for solving a particular problem.
+The idea: 
+This app will make a playlist of a user-chosen duration and genre. At the moment, this works as a script within a python environment. In future this will be moved to web app.
 
-Version 1: program can find a list of songs that have a total time close to the goal time out of a group of songs.
-Version 2: program can also take an input of genre or playlist
+Data source:
+Kaggle Spotify Tracks Dataset (https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset)
