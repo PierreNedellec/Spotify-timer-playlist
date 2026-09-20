@@ -1,7 +1,6 @@
 
 
 def design_playlist(tracks, target_min):
-    print(f"Number of tracks selected: {len(tracks)}")
     possible_times = {0:[]}
     for track in tracks:
         track_id = track[0]
@@ -16,5 +15,4 @@ def design_playlist(tracks, target_min):
             possible_times.update({new_time:new_track_path})
 
     best_time = min(possible_times.keys(), key= lambda x: abs(x-target_min*60))
-    playlist_track_ids = possible_times[best_time]
-    return playlist_track_ids
+    return possible_times[best_time], best_time

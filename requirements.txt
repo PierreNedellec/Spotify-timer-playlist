@@ -1,4 +1,3 @@
 pandas
-requests
-spotipy
+spotipy>=2.26
 python-dotenv

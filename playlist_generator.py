@@ -1,10 +1,6 @@
 import pandas as pd
-import requests
-import base64
-from spotipy.oauth2 import SpotifyOAuth
 from dotenv import load_dotenv
 load_dotenv()
-import os
 import spotify_client
 import solver
 
@@ -41,7 +37,9 @@ def main():
     for id,duration in tracks_duration_ms:
         tracks.append((id,round(duration/1000))) 
 
-    playlist_ids = solver.design_playlist(tracks, target_min)
+    print(f"Number of tracks selected: {len(tracks)}")
+    playlist_ids, playlist_time = solver.design_playlist(tracks, target_min)
+    print(f"Created a playlist of time {playlist_time//60}:{playlist_time%60:02d}")
 
     sp = spotify_client.get_client()
     url = spotify_client.create_timed_playlist(sp, playlist_ids, target_min, genre)
