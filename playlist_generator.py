@@ -1,6 +1,4 @@
 import pandas as pd
-from dotenv import load_dotenv
-load_dotenv()
 import spotify_client
 import solver
 

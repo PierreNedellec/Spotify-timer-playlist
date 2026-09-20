@@ -1,18 +1,18 @@
+import random
 
 
-def design_playlist(tracks, target_min):
-    possible_times = {0:[]}
-    for track in tracks:
-        track_id = track[0]
-        track_time = track[1]
-        for time in possible_times.copy().keys():
+def design_playlist(tracks, target_s, tolerance=0.1):
+    tracks = tracks[:]
+    random.shuffle(tracks)
+    limit = target_s * (1 + tolerance)
+
+    possible_times = {0: []}
+    for track_id, track_time in tracks:
+        for time, path in list(possible_times.items()):
             new_time = time + track_time
-            if new_time > target_min*60*1.1:
-                 continue
-            if track_id in possible_times[time]:
+            if new_time > limit or new_time in possible_times:
                 continue
-            new_track_path = possible_times[time]+[track_id]
-            possible_times.update({new_time:new_track_path})
+            possible_times[new_time] = path + [track_id]
 
-    best_time = min(possible_times.keys(), key= lambda x: abs(x-target_min*60))
+    best_time = min(possible_times, key=lambda t: abs(t - target_s))
     return possible_times[best_time], best_time
