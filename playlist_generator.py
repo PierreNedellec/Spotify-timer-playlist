@@ -19,12 +19,17 @@ def ask_genre(available_genres):
         genre = input("Genre (e.g. house, jazz): ").strip().lower()
         if genre in available_genres:
             return genre
-        print(f"Unknown genre. Options: {', '.join(available_genres)}")    
+        print(f"Unknown genre. Options: {', '.join(available_genres)}")   
+
+def format_duration(total_seconds):
+    minutes, seconds = divmod(total_seconds, 60)
+    return f"{minutes}:{seconds:02d}" 
 
 def main():
     df = pd.read_csv("data/spotify-tracks.csv")
 
     target_min = ask_minutes()
+    target_s = target_min*60
     genre = ask_genre(sorted(df["track_genre"].unique()))
     min_ms = 90 * 1000  
     max_ms = 30 * 60 * 1000 
@@ -36,8 +41,17 @@ def main():
         tracks.append((id,round(duration/1000))) 
 
     print(f"Number of tracks selected: {len(tracks)}")
-    playlist_ids, playlist_time = solver.design_playlist(tracks, target_min)
-    print(f"Created a playlist of time {playlist_time//60}:{playlist_time%60:02d}")
+    playlist_ids, playlist_time = solver.design_playlist(tracks, target_s)
+
+    if not playlist_ids:
+        print("No combination of songs fits. Try a longer time or another genre.")
+        return
+
+    print(f"Created a playlist of time {format_duration(playlist_time)}")
+    gap = abs(playlist_time - target_s)
+    if gap > 30:
+        print(f"Warning: that's {format_duration(gap)} off your target. "
+            "This genre may not have enough songs.")
 
     sp = spotify_client.get_client()
     url = spotify_client.create_timed_playlist(sp, playlist_ids, target_min, genre)

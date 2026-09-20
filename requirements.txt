@@ -1,3 +1,4 @@
 pandas
 spotipy>=2.26
 python-dotenv
+pytest
