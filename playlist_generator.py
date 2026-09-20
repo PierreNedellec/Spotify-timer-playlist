@@ -8,7 +8,7 @@ import os
 
 
 # MAKING THE PLAYLIST
-df = pd.read_csv("spotify-tracks.csv")
+df = pd.read_csv("data/spotify-tracks.csv")
 
 target_min = int(input("How long should the playlist be in minutes? "))
 target_ms = target_min*60*1000
