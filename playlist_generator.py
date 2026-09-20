@@ -3,7 +3,6 @@ import spotify_client
 import solver
 
 
-# MAKING THE PLAYLIST
 def ask_minutes():
     while True:
         try:
@@ -32,13 +31,10 @@ def main():
     target_s = target_min*60
     genre = ask_genre(sorted(df["track_genre"].unique()))
     min_ms = 90 * 1000  
-    max_ms = 30 * 60 * 1000 
+    max_ms = 10 * 60 * 1000 
     filtered_df = df[(df["duration_ms"] >= min_ms) & (df["duration_ms"] <= max_ms) & (df["popularity"] > 40) & (df["track_genre"] == genre)]
 
-    tracks_duration_ms = list(zip(filtered_df["track_id"], filtered_df["duration_ms"]))
-    tracks = []
-    for id,duration in tracks_duration_ms:
-        tracks.append((id,round(duration/1000))) 
+    tracks = [(track_id, round(d / 1000)) for track_id, d in zip(filtered_df["track_id"], filtered_df["duration_ms"])]
 
     print(f"Number of tracks selected: {len(tracks)}")
     playlist_ids, playlist_time = solver.design_playlist(tracks, target_s)
