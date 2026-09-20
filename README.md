@@ -4,7 +4,7 @@ Build a Spotify playlist that lasts a chosen length of time. Ask for 43 minutes 
 
 Picking a set of songs whose durations add up to a target is the **subset-sum problem**, so most of this project is about solving that quickly and exactly. The current solver handles 400 candidate tracks and a two-hour target in under a second.
 
-> **Demo:** (docs/Spotify_playlist_timer_demo.gif)
+![Demo](docs/Spotify_playlist_timer_demo.gif)
 
 ## How it works
 
