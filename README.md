@@ -2,7 +2,7 @@
 
 Build a Spotify playlist that lasts a chosen length of time. Ask for 43 minutes of house, and it creates a private playlist in your account that runs for 43 minutes.
 
-Picking a set of songs whose durations add up to a target is the **subset-sum problem**, so most of this project is about solving that quickly and exactly. The current solver handles 400 candidate tracks and a two-hour target in under a second.
+Picking a set of songs whose durations add up to a target is the **subset-sum problem**, so most of this project is about solving that quickly and exactly. The current solver handles 400 candidate tracks and a two-hour target in about a second.
 
 ![Demo](docs/Spotify_playlist_timer_demo.gif)
 
@@ -41,7 +41,7 @@ Two details:
 | V3 | Dynamic programming: one combination per reachable total |
 | V4 | V3, with the snapshot fix and shuffling (current) |
 
-600 runs: 4 algorithms × 6 track counts (10–400) × 5 targets (5–120 minutes) × 5 repeats, with a 5-second cut-off per run.
+600 runs: 4 algorithms × 6 track counts (10–400) × 5 targets (5–120 minutes) × 5 repeats, with a 20-second cut-off per run.
 
 ![Runtime against number of candidate tracks](docs/benchmark.png)
 
@@ -49,28 +49,28 @@ Median runtime for a 60-minute target, in seconds:
 
 | Tracks | V1 | V2 | V3 | V4 |
 |---|---|---|---|---|
-| 10 | 0.000 | 0.001 | 0.002 | 0.001 |
-| 30 | 0.000 | timed out | 0.080 | 0.029 |
-| 50 | 0.001 | timed out | 0.197 | 0.059 |
-| 100 | 0.000 | timed out | 0.474 | 0.157 |
-| 200 | 0.001 | timed out | 1.071 | 0.327 |
-| 400 | 0.001 | timed out | 2.371 | 0.747 |
+| 10 | 0.000 | 0.001 | 0.001 | 0.000 |
+| 30 | 0.000 | timed out | 0.031 | 0.011 |
+| 50 | 0.000 | timed out | 0.071 | 0.023 |
+| 100 | 0.000 | timed out | 0.208 | 0.067 |
+| 200 | 0.000 | timed out | 0.500 | 0.155 |
+| 400 | 0.000 | timed out | 1.012 | 0.335 |
 
-Runs that produced no answer within 5 seconds, across the whole grid:
+Runs that produced no answer within 20 seconds, across the whole grid:
 
 | Version | Failed |
 |---|---|
 | V1 | 26% |
-| V2 | 64% |
-| V3 | 2.7% |
+| V2 | 63% |
+| V3 | 0% |
 | V4 | 0% |
 
 What the results show:
 
 - **Brute force dies early.** V2 finished every 10-track test and almost nothing beyond that: with a 60-minute target it failed at every size from 30 tracks up. Its work grows with the number of combinations, not the number of tracks.
 - **The heuristic is fast but unreliable.** When it converges it is the quickest of all, by a wide margin, and it hits the target exactly. But it failed a quarter of the grid, and its failures cluster on *short* targets with plenty of tracks: a 5-minute playlist holds only two or three songs, so there is almost nothing to swap, and it oscillates until the cut-off.
-- **Removing the redundant work is worth about 3×.** V4 is 2.4–3.1× faster than V3 between 30 and 200 tracks. At 400 tracks the measured ratio drops, but only because V3's slowest runs timed out and so were excluded.
-- **V3 is also less accurate when tracks are scarce.** In every case where the two disagreed, V4 was closer to the target, once by 4 minutes. V3 reads its dictionary while modifying it, so a total that is overwritten mid-pass loses the routes that led onwards from it. That only matters when few combinations exist, which is why the bug stayed hidden in ordinary use.
+- **Removing the redundant work is worth about 3×.** From 30 tracks upwards, V4's median runtime is 2.7–3.5× lower than V3's, and V4 was faster in 144 of the 150 matched tests. Both finished every run.
+- **V3 is also less accurate when tracks are scarce.** In all 8 cases where the two disagreed, V4 was closer to the target, in one case by more than 4 minutes. V3 reads its dictionary while modifying it, so a total that is overwritten mid-pass loses the routes that led onwards from it. That only matters when few combinations exist, which is why the bug stayed hidden in ordinary use.
 
 Raw results: `docs/benchmark_results.csv`.
 

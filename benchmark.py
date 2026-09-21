@@ -51,7 +51,7 @@ def _worker(algo, tracks, target_s, queue):
     queue.put((playlist_time, time.perf_counter() - start))
 
 
-def time_it(algo, tracks, target_s, limit=5):
+def time_it(algo, tracks, target_s, limit=20):
     """Run algo in a separate process.
     Returns (playlist_time, seconds), or None if it ran longer than limit."""
     queue = mp.Queue()
